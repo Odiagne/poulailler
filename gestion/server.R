@@ -1,10 +1,11 @@
 options(encoding="utf-8")
 library(shiny)
 source("fonctions.R")
+stat_bande1 = cal_stat_bande1()
 server <- function(input, output, session) {
   output$effBande1 <- renderValueBox({
     valueBox(
-      value = 0,
+      value = stat_bande1$nbElements,
       subtitle = h4("Éléments de bande 1"),
       color ='yellow'
     )
@@ -29,7 +30,7 @@ server <- function(input, output, session) {
   
   output$depBande1 <- renderValueBox({
     valueBox(
-      value = 0,
+      value = stat_bande1$depenses,
       subtitle = h4("F CFA de charges variables en bande 1"),
       color ='aqua'
     )
@@ -53,7 +54,7 @@ server <- function(input, output, session) {
   
   output$prevBande1 <- renderValueBox({
     valueBox(
-      value = 0,
+      value = stat_bande1$prix_revient,
       subtitle = h4("Prix de revient unitaire bande 1"),
       color ='aqua'
     )
@@ -80,7 +81,11 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$validerDepense, {
-    add_depense(input$numBandeDep, input$typeDepense, input$coutDep, input$dateDepense)
+    add_depense(input$numBandeDep, input$typeDepense, input$coutDep, input$dateDepense, input$remarques)
+  })
+  
+  observeEvent(input$validerMortalite, {
+    add_mort(input$numBandeMort, input$nbMort, input$dateMort, input$remarquesMort)
   })
   # output$rep_puissanceInstallee <- renderPlotly({rep_puissanceInstallee})  
   # output$rep_autoconso <- renderPlotly({rep_autoconsommation})

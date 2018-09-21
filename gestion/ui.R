@@ -12,6 +12,7 @@ dashboardPage(
     sidebarMenu(
       menuItem("Dashboard", tabName = "dashboard"),
       menuItem("Dépenses", tabName = "depenses"),
+      menuItem("Mortalité", tabName = "mortalite"),
       menuItem("Bandes", tabName = "bandes")
       # ,
       # menuItem("Map", tabName = "map")
@@ -60,6 +61,28 @@ dashboardPage(
                   dateInput("dateDepense", label = h4('Date de la dépense'), value = Sys.Date()),
                   textInput("remarques", label = "Remarques ?"),
                   actionButton("validerDepense", "Valider")
+                  
+                )
+              )
+              # ,
+              # tabItem("rawdata",
+              #         numericInput("byPower", "Rows to show", 25)
+              #         #,
+              #         # verbatimTextOutput("rawtable"),
+              #         # downloadButton("downloadCsv", "Download as CSV")
+              # )
+      )
+      ,
+      tabItem("mortalite",
+              fluidRow(
+                box(
+                  width = 6, status = "info", solidHeader = TRUE,
+                  title = "Recenser les morts",
+                  numericInput("numBandeMort", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
+                  numericInput("nbMort", label = h4("Entrez le nombre de morts"), value = NA, min = 0),
+                  dateInput("dateMort", label = h4('Date du constat'), value = Sys.Date()),
+                  textInput("remarquesMort", label = "Remarques ?"),
+                  actionButton("validerMortalite", "Valider")
                   
                 )
               )
