@@ -1,8 +1,10 @@
 
 options(encoding = "UTF-8")
 require(shinydashboard)
+
 require(plotly)
-#require(shinySignals)
+require(shinyalert)
+require(shinySignals)
 dashboardPage(
   dashboardHeader(title = "DIAGNE-avi"),
   dashboardSidebar(
@@ -22,10 +24,16 @@ dashboardPage(
   dashboardBody(
     tabItems(
       tabItem("dashboard",
+              actionButton("Refresh", "Rafraîchir"),
               fluidRow(
                 valueBoxOutput("effBande1"),
                 valueBoxOutput("effBande2"),
                 valueBoxOutput("effBande3")
+              ),
+              fluidRow(
+                valueBoxOutput("nbJoursBande1"),
+                valueBoxOutput("nbJoursBande2"),
+                valueBoxOutput("nbJoursBande3")
               ),
               fluidRow(
                   valueBoxOutput("depBande1"),
@@ -60,39 +68,28 @@ dashboardPage(
                   numericInput("coutDep", label = h4("Entrez le cout de la dépense"), value = NA, min = 0),
                   dateInput("dateDepense", label = h4('Date de la dépense'), value = Sys.Date()),
                   textInput("remarques", label = "Remarques ?"),
+                  useShinyalert(),
                   actionButton("validerDepense", "Valider")
                   
                 )
               )
-              # ,
-              # tabItem("rawdata",
-              #         numericInput("byPower", "Rows to show", 25)
-              #         #,
-              #         # verbatimTextOutput("rawtable"),
-              #         # downloadButton("downloadCsv", "Download as CSV")
-              # )
+              
       )
       ,
       tabItem("mortalite",
               fluidRow(
                 box(
                   width = 6, status = "info", solidHeader = TRUE,
-                  title = "Recenser les morts",
+                  title = "Recenser les pertes",
                   numericInput("numBandeMort", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
-                  numericInput("nbMort", label = h4("Entrez le nombre de morts"), value = NA, min = 0),
+                  numericInput("nbMort", label = h4("Entrez le nombre de pertes"), value = NA, min = 0),
                   dateInput("dateMort", label = h4('Date du constat'), value = Sys.Date()),
                   textInput("remarquesMort", label = "Remarques ?"),
+                  useShinyalert(),
                   actionButton("validerMortalite", "Valider")
                   
                 )
               )
-              # ,
-              # tabItem("rawdata",
-              #         numericInput("byPower", "Rows to show", 25)
-              #         #,
-              #         # verbatimTextOutput("rawtable"),
-              #         # downloadButton("downloadCsv", "Download as CSV")
-              # )
       )
       ,
       tabItem("bandes",
@@ -103,6 +100,7 @@ dashboardPage(
                   dateInput("dateDebutBande", label = h4('Date de début'), value = Sys.Date()),
                   numericInput("nombreElementsBande", label = h4("Entrez le nombre d'éléments"), value = NA, min = 0),
                   numericInput("prixAchat", label = h4("Entrez le prix d'achat de la bande"), value = NA, min = 0),
+                  useShinyalert(),
                   actionButton("validerDebutBande", "Valider")
                   
                   # ,
@@ -113,7 +111,8 @@ dashboardPage(
                   title = "Cloturer une bande",
                   numericInput("numBandeCloture", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
                   dateInput("dateFinBande", label = h4('Date de fin'), value = Sys.Date()),
-                  textInput("remarques", label = "Remarques ?"),
+                  textInput("remarquesClos", label = "Remarques ?"),
+                  useShinyalert(),
                   actionButton("validerFinBande", "Valider")
                   
                 )

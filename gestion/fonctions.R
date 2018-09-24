@@ -9,6 +9,14 @@ add_bande = function(date_debut, nombre, prix_achat){
   dbDisconnect(con)
 }
 
+end_bande = function(numBandeCloture, dateFinBande, remarques){
+  con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
+                   user = "aviculteur", password = "diagne_avi")
+  query = paste0('UPDATE AVICULTURE.BANDES SET DATE_FIN = "', dateFinBande, '", REMARQUES = "', remarques, '" WHERE BANDE = ', numBandeCloture)
+  dbGetQuery(con, query)
+  dbDisconnect(con)
+}
+
 add_depense = function(bande, type, cout, date, remarque){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
                    user = "aviculteur", password = "diagne_avi")
@@ -16,8 +24,10 @@ add_depense = function(bande, type, cout, date, remarque){
   query = paste0('INSERT INTO AVICULTURE.DEPENSES(BANDE, TYPE, COUT, DATE, REMARQUES) VALUES(', bande, ', "', type, '", ', cout, ', "', date, '", "', remarque,'")') 
   dbGetQuery(con, query)
   dbDisconnect(con)
-
+  print(query)
 }
+
+
 
 add_mort = function(bande, nb_morts, date, remarque){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
@@ -41,7 +51,49 @@ cal_stat_bande1 = function(){
   nb_morts_result = dbGetQuery(con, query_nb_morts)
   query_dep = paste0("select IFNULL(sum(COUT), 0) as depenses from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
   depenses = dbGetQuery(con, query_dep)
-  prix_revient = (infos_bande$PRIX_ACHAT + depenses$depenses) / infos_bande$NOMBRE
+  nbElements = infos_bande$NOMBRE - nb_morts_result$nb_morts
+  prix_revient = (infos_bande$PRIX_ACHAT + depenses$depenses) / nbElements
   dbDisconnect(con)
-  return(list(numBande = infos_bande$BANDE, nbJours=nbJours, nbElements = infos_bande$NOMBRE - nb_morts_result$nb_morts, depenses = depenses$depenses, prix_revient = prix_revient))
+  return(list(numBande = infos_bande$BANDE, nbJours=nbJours, nbElements = nbElements, depenses = depenses$depenses, prix_revient = prix_revient))
 }
+
+eff_bande <- function(stat_bande, bande){
+  renderValueBox({
+    valueBox(
+      value = stat_bande$nbElements,
+      subtitle = h4(paste0("Éléments de bande ", bande)),
+      color ='yellow'
+    )
+  })
+}
+
+nbJoursBande <- function(stat_bande, bande){
+  renderValueBox({
+    valueBox(
+      value = stat_bande$nbJours,
+      subtitle = h4(paste0("Jours pour la bande ", bande)),
+      color ='aqua'
+    )
+  })
+}
+
+depBande <- function(stat_bande, bande){
+  renderValueBox({
+    valueBox(
+      value = stat_bande$depenses,
+      subtitle = h4(paste0("F CFA de charges variables en bande ", bande)),
+      color ='aqua'
+    )
+  })
+}
+
+prevBande <- function(stat_bande, bande){
+  renderValueBox({
+    valueBox(
+      value = stat_bande$prix_revient,
+      subtitle = h4(paste0("Prix de revient unitaire bande ", bande)),
+      color ='aqua'
+    )
+  })
+}
+

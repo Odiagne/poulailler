@@ -1,15 +1,13 @@
 options(encoding="utf-8")
 library(shiny)
+require(shinyalert)
 source("fonctions.R")
-stat_bande1 = cal_stat_bande1()
+
 server <- function(input, output, session) {
-  output$effBande1 <- renderValueBox({
-    valueBox(
-      value = stat_bande1$nbElements,
-      subtitle = h4("Éléments de bande 1"),
-      color ='yellow'
-    )
-  })
+
+  stat_bande1 = cal_stat_bande1()
+
+  output$effBande1 <- eff_bande(stat_bande1, 1)
   
   output$effBande2 <- renderValueBox({
     valueBox(
@@ -28,13 +26,25 @@ server <- function(input, output, session) {
     )
   })
   
-  output$depBande1 <- renderValueBox({
+  output$nbJoursBande1 <- nbJoursBande(stat_bande1, 1)
+  
+  output$nbJoursBande2 <- renderValueBox({
     valueBox(
-      value = stat_bande1$depenses,
-      subtitle = h4("F CFA de charges variables en bande 1"),
+      value = 0,
+      subtitle = h4("Jours pour la bande 2"),
       color ='aqua'
     )
   })
+  
+  output$nbJoursBande3 <- renderValueBox({
+    valueBox(
+      value = 0,
+      subtitle = h4("Jours pour la bande 3"),
+      color ='aqua'
+    )
+  })
+  
+  output$depBande1 <- depBande(stat_bande1, 1)
   
   output$depBande2 <- renderValueBox({
     valueBox(
@@ -52,13 +62,7 @@ server <- function(input, output, session) {
     )
   })
   
-  output$prevBande1 <- renderValueBox({
-    valueBox(
-      value = stat_bande1$prix_revient,
-      subtitle = h4("Prix de revient unitaire bande 1"),
-      color ='aqua'
-    )
-  })
+  output$prevBande1 <- prevBande(stat_bande1, 1)
   
   output$prevBande2 <- renderValueBox({
     valueBox(
@@ -76,35 +80,34 @@ server <- function(input, output, session) {
     )
   })
   
+  observeEvent(input$Refresh, {
+    stat_bande1 = cal_stat_bande1()
+    output$effBande1 <- eff_bande(stat_bande1, 1)
+    output$depBande1 <- depBande(stat_bande1, 1)
+    output$prevBande1 <- prevBande(stat_bande1, 1)
+  })
+  
   observeEvent(input$validerDebutBande, {
     add_bande(input$dateDebutBande, input$nombreElementsBande, input$prixAchat)
+    shinyalert("Success!", "Bande initialisée", type = "success")
+  })
+  
+  observeEvent(input$validerFinBande, {
+    end_bande(input$numBandeCloture, input$dateFinBande, input$remarquesClos)
+    shinyalert("Success!", "Bande cloturée", type = "success")
   })
   
   observeEvent(input$validerDepense, {
     add_depense(input$numBandeDep, input$typeDepense, input$coutDep, input$dateDepense, input$remarques)
+    shinyalert("Success!", "Dépense enregistrée", type = "success")
   })
   
   observeEvent(input$validerMortalite, {
     add_mort(input$numBandeMort, input$nbMort, input$dateMort, input$remarquesMort)
+    shinyalert("Success!", "Perte enregistrée", type = "success")
   })
-  # output$rep_puissanceInstallee <- renderPlotly({rep_puissanceInstallee})  
-  # output$rep_autoconso <- renderPlotly({rep_autoconsommation})
-  # output$rep_autonomie <- renderPlotly({rep_autonomie})
-  # output$comp_productible <- renderPlotly({box_productible})
-  # output$comp_autoconso <- renderPlotly({box_autoconso})
-  # output$comp_conso <- renderPlotly({box_conso})
-  # output$comp_autonomie <- renderPlotly({box_autonomie})
-  # output$valfinUnitaire <- renderPlotly({box_valfinUnitaire})
-  # output$valfin <- renderPlotly({box_valfin})
-  
-  # kpi <-reactive({input$selKPI})
-  # observeEvent(input$selKPI, {session$sendCustomMessage(type="jsondata",kpi())})
   
 }
-#library(shinySignals)   # devtools::install_github("hadley/shinySignals")
-# library(dplyr)
-# library(shinydashboard)
-#library(bubbles)        # devtools::install_github("jcheng5/bubbles")
 
 
 
