@@ -38,6 +38,16 @@ add_mort = function(bande, nb_morts, date, remarque){
   dbDisconnect(con)
 }
 
+add_vente = function(bande, type, prix, nombre_vendu, date, remarque){
+  con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
+                   user = "aviculteur", password = "diagne_avi")
+  
+  query = paste0('INSERT INTO AVICULTURE.VENTES(BANDE, TYPE, PRIX, NOMBRE_VENDU, DATE, REMARQUES) VALUES(', bande, ', "', type, '", ', prix, ', ', nombre_vendu, ', "', date, '", "', remarque, '")') 
+  dbGetQuery(con, query)
+  dbDisconnect(con)
+}
+
+
 cal_stat_bande1 = function(){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
                    user = "aviculteur", password = "diagne_avi")
@@ -62,7 +72,7 @@ eff_bande <- function(stat_bande, bande){
     valueBox(
       value = stat_bande$nbElements,
       subtitle = h4(paste0("Éléments de bande ", bande)),
-      color ='yellow'
+      color ='light-blue'
     )
   })
 }
@@ -72,7 +82,7 @@ nbJoursBande <- function(stat_bande, bande){
     valueBox(
       value = stat_bande$nbJours,
       subtitle = h4(paste0("Jours pour la bande ", bande)),
-      color ='aqua'
+      color ='light-blue'
     )
   })
 }
@@ -82,7 +92,7 @@ depBande <- function(stat_bande, bande){
     valueBox(
       value = stat_bande$depenses,
       subtitle = h4(paste0("F CFA de charges variables en bande ", bande)),
-      color ='aqua'
+      color ='light-blue'
     )
   })
 }
@@ -92,7 +102,7 @@ prevBande <- function(stat_bande, bande){
     valueBox(
       value = stat_bande$prix_revient,
       subtitle = h4(paste0("Prix de revient unitaire bande ", bande)),
-      color ='aqua'
+      color ='light-blue'
     )
   })
 }

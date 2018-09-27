@@ -12,10 +12,11 @@ dashboardPage(
     #             min = 0, max = 50, value = 3, step = 0.1
     # ),
     sidebarMenu(
-      menuItem("Dashboard", tabName = "dashboard"),
-      menuItem("Dépenses", tabName = "depenses"),
-      menuItem("Mortalité", tabName = "mortalite"),
-      menuItem("Bandes", tabName = "bandes")
+      menuItem("Dashboard", tabName = "dashboard", icon = icon("info-circle")),
+      menuItem("Dépenses", tabName = "depenses", icon = icon("credit-card")),
+      menuItem("Ventes", tabName = "ventes", icon = icon("credit-card")),
+      menuItem("Mortalité", tabName = "mortalite", icon = icon("bomb")),
+      menuItem("Bandes", tabName = "bandes", icon = icon("cart-plus"))
       # ,
       # menuItem("Map", tabName = "map")
     )
@@ -39,17 +40,6 @@ dashboardPage(
                   valueBoxOutput("depBande1"),
                   valueBoxOutput("depBande2"),
                   valueBoxOutput("depBande3")
-                # ,
-                # box(
-                #   width = 4, status = "info", solidHeader = TRUE,
-                #   title = "Répartition de l'autoconsommation",
-                #   plotlyOutput('rep_autoconso')
-                # ),
-                # box(
-                #   width = 4, status = "info", solidHeader = TRUE,
-                #   title = "Répartition de l'autonomie",
-                #   plotlyOutput('rep_autonomie')
-                # )
               ),
               fluidRow(
                 valueBoxOutput("prevBande1"),
@@ -58,10 +48,10 @@ dashboardPage(
               )
       )
       ,
-      tabItem("depenses",
+      tabItem("depenses", 
               fluidRow(
                 box(
-                  width = 6, status = "info", solidHeader = TRUE,
+                  width = 6, status = "primary", solidHeader = TRUE,
                   title = "Ajouter une dépense",
                   numericInput("numBandeDep", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
                   textInput("typeDepense", label = h4("Entrez le type de dépense")),
@@ -79,7 +69,7 @@ dashboardPage(
       tabItem("mortalite",
               fluidRow(
                 box(
-                  width = 6, status = "info", solidHeader = TRUE,
+                  width = 6, status = "danger", solidHeader = TRUE,
                   title = "Recenser les pertes",
                   numericInput("numBandeMort", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
                   numericInput("nbMort", label = h4("Entrez le nombre de pertes"), value = NA, min = 0),
@@ -92,10 +82,30 @@ dashboardPage(
               )
       )
       ,
+      tabItem("ventes",
+              fluidRow(
+                box(
+                  width = 6, status = "success", solidHeader = TRUE,
+                  title = "Enregistrer les ventes",
+                  numericInput("numBandeVente", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
+                  selectInput("typeVente", "Type de vente:",
+                              c("Détail" = "det",
+                                "En gros" = "gros")),
+                  numericInput("prixVente", label = h4("Entrez le prix total de la vente"), value = NA, min = 0),
+                  numericInput("nbVendu", label = h4("Entrez le nombre d'éléments vendus"), value = NA, min = 0),
+                  dateInput("dateVente", label = h4('Date de la vente'), value = Sys.Date()),
+                  textInput("remarquesVente", label = "Remarques ?"),
+                  useShinyalert(),
+                  actionButton("validerVente", "Valider")
+                  
+                )
+              )
+      )
+      ,
       tabItem("bandes",
               fluidRow(
                 box(
-                  width = 6, status = "info", solidHeader = TRUE,
+                  width = 6, status = "primary", solidHeader = TRUE,
                   title = "Ajouter une bande",
                   dateInput("dateDebutBande", label = h4('Date de début'), value = Sys.Date()),
                   numericInput("nombreElementsBande", label = h4("Entrez le nombre d'éléments"), value = NA, min = 0),
@@ -107,7 +117,7 @@ dashboardPage(
                   # tableOutput("packageTable")
                 ),
                 box(
-                  width = 6, status = "info", solidHeader = TRUE,
+                  width = 6, status = "primary", solidHeader = TRUE,
                   title = "Cloturer une bande",
                   numericInput("numBandeCloture", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
                   dateInput("dateFinBande", label = h4('Date de fin'), value = Sys.Date()),

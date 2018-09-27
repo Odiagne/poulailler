@@ -14,7 +14,7 @@ server <- function(input, output, session) {
       # value = paste0(formatC(0, format = "f", digits = 0), "%"),
       value = 0,
       subtitle = h4("Éléments de bande 2"),
-      color ='yellow'
+      color ='purple'
     )
   })
   
@@ -22,17 +22,18 @@ server <- function(input, output, session) {
     valueBox(
       value = 0,
       subtitle =h4("Éléments de bande 3"),
-      color ='yellow'
+      color ='olive'
     )
   })
   
+
   output$nbJoursBande1 <- nbJoursBande(stat_bande1, 1)
   
   output$nbJoursBande2 <- renderValueBox({
     valueBox(
       value = 0,
       subtitle = h4("Jours pour la bande 2"),
-      color ='aqua'
+      color ='purple'
     )
   })
   
@@ -40,7 +41,7 @@ server <- function(input, output, session) {
     valueBox(
       value = 0,
       subtitle = h4("Jours pour la bande 3"),
-      color ='aqua'
+      color ='olive'
     )
   })
   
@@ -50,7 +51,7 @@ server <- function(input, output, session) {
     valueBox(
       value = 0,
       subtitle = h4("F CFA de charges variables en bande 2"),
-      color ='aqua'
+      color ='purple'
     )
   })
   
@@ -58,7 +59,7 @@ server <- function(input, output, session) {
     valueBox(
       value = 0,
       subtitle = h4("F CFA de charges variables en bande 3"),
-      color ='aqua'
+      color ='olive'
     )
   })
   
@@ -68,7 +69,7 @@ server <- function(input, output, session) {
     valueBox(
       value = 0,
       subtitle = h4("Prix de revient unitaire bande 2"),
-      color ='aqua'
+      color ='purple'
     )
   })
   
@@ -76,7 +77,7 @@ server <- function(input, output, session) {
     valueBox(
       value = 0,
       subtitle = h4("Prix de revient unitaire bande 3"),
-      color ='aqua'
+      color ='olive'
     )
   })
   
@@ -105,6 +106,12 @@ server <- function(input, output, session) {
   observeEvent(input$validerMortalite, {
     add_mort(input$numBandeMort, input$nbMort, input$dateMort, input$remarquesMort)
     shinyalert("Success!", "Perte enregistrée", type = "success")
+  })
+  
+  observeEvent(input$validerVente, {
+    typeVente = ifelse(input$typeVente=="det", "AU DETAIL", "EN GROS")
+    add_vente(input$numBandeVente, typeVente, input$prixVente, input$nbVendu, input$dateVente, input$remarquesVente)
+    shinyalert("Success!", "Vente enregistrée", type = "success")
   })
   
 }
