@@ -2,7 +2,7 @@ require(RMySQL)
 require(lubridate)
 add_bande = function(date_debut, nombre, prix_achat){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
-                   user = "aviculteur", password = "diagne_avi")
+                   user = "aviculteur", password = "diagne-avi")
   
   query = paste0('INSERT INTO AVICULTURE.BANDES(DATE_DEBUT, NOMBRE, PRIX_ACHAT) VALUES("', date_debut, '", ', nombre, ', ', prix_achat,")") 
   dbGetQuery(con, query)
@@ -11,7 +11,7 @@ add_bande = function(date_debut, nombre, prix_achat){
 
 end_bande = function(numBandeCloture, dateFinBande, remarques){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
-                   user = "aviculteur", password = "diagne_avi")
+                   user = "aviculteur", password = "diagne-avi")
   query = paste0('UPDATE AVICULTURE.BANDES SET DATE_FIN = "', dateFinBande, '", REMARQUES = "', remarques, '" WHERE BANDE = ', numBandeCloture)
   dbGetQuery(con, query)
   dbDisconnect(con)
@@ -19,7 +19,7 @@ end_bande = function(numBandeCloture, dateFinBande, remarques){
 
 add_depense = function(bande, type, cout, date, remarque){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
-                   user = "aviculteur", password = "diagne_avi")
+                   user = "aviculteur", password = "diagne-avi")
   
   query = paste0('INSERT INTO AVICULTURE.DEPENSES(BANDE, TYPE, COUT, DATE, REMARQUES) VALUES(', bande, ', "', type, '", ', cout, ', "', date, '", "', remarque,'")') 
   dbGetQuery(con, query)
@@ -31,7 +31,7 @@ add_depense = function(bande, type, cout, date, remarque){
 
 add_mort = function(bande, nb_morts, date, remarque){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
-                   user = "aviculteur", password = "diagne_avi")
+                   user = "aviculteur", password = "diagne-avi")
   
   query = paste0('INSERT INTO AVICULTURE.MORTALITE(BANDE, NOMBRE_MORTS, DATE, REMARQUES) VALUES(', bande, ', ', nb_morts, ', "', date, '", "', remarque, '")') 
   dbGetQuery(con, query)
@@ -40,7 +40,7 @@ add_mort = function(bande, nb_morts, date, remarque){
 
 add_vente = function(bande, type, prix, nombre_vendu, date, remarque){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
-                   user = "aviculteur", password = "diagne_avi")
+                   user = "aviculteur", password = "diagne-avi")
   
   query = paste0('INSERT INTO AVICULTURE.VENTES(BANDE, TYPE, PRIX, NOMBRE_VENDU, DATE, REMARQUES) VALUES(', bande, ', "', type, '", ', prix, ', ', nombre_vendu, ', "', date, '", "', remarque, '")') 
   dbGetQuery(con, query)
@@ -50,7 +50,7 @@ add_vente = function(bande, type, prix, nombre_vendu, date, remarque){
 
 cal_stat_bande1 = function(){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
-                   user = "aviculteur", password = "diagne_avi")
+                   user = "aviculteur", password = "diagne-avi")
   query_bande1 = 'select * from AVICULTURE.BANDES where BANDE IN (
     select min(BANDE) from AVICULTURE.BANDES where DATE_DEBUT IN (
       select min(DATE_DEBUT) from AVICULTURE.BANDES)
@@ -100,7 +100,7 @@ depBande <- function(stat_bande, bande){
 prevBande <- function(stat_bande, bande){
   renderValueBox({
     valueBox(
-      value = stat_bande$prix_revient,
+      value = ceiling(stat_bande$prix_revient),
       subtitle = h4(paste0("Prix de revient unitaire bande ", bande)),
       color ='light-blue'
     )
