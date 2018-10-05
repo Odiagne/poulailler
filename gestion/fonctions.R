@@ -52,19 +52,105 @@ cal_stat_bande1 = function(){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
                    user = "aviculteur", password = "diagne-avi")
   query_bande1 = 'select * from AVICULTURE.BANDES where BANDE IN (
-    select min(BANDE) from AVICULTURE.BANDES where DATE_DEBUT IN (
-      select min(DATE_DEBUT) from AVICULTURE.BANDES)
+    select min(BANDE) from AVICULTURE.BANDES where DATE_FIN IS NULL AND DATE_DEBUT IN (
+      select min(DATE_DEBUT) from AVICULTURE.BANDES where DATE_FIN IS NULL 
+      )
   );'
   infos_bande = dbGetQuery(con, query_bande1)
-  nbJours = time_length(interval(start = infos_bande$DATE_DEBUT, end = Sys.Date()), unit = "days") 
-  query_nb_morts = paste0("select IFNULL(sum(NOMBRE_MORTS), 0) as nb_morts from AVICULTURE.MORTALITE where BANDE = ", infos_bande$BANDE, ";")
-  nb_morts_result = dbGetQuery(con, query_nb_morts)
-  query_dep = paste0("select IFNULL(sum(COUT), 0) as depenses from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
-  depenses = dbGetQuery(con, query_dep)
-  nbElements = infos_bande$NOMBRE - nb_morts_result$nb_morts
-  prix_revient = (infos_bande$PRIX_ACHAT + depenses$depenses) / nbElements
+  if(nrow(infos_bande)>0){
+    numBande = infos_bande$BANDE
+    nbJours = time_length(interval(start = infos_bande$DATE_DEBUT, end = Sys.Date()), unit = "days") 
+    query_nb_morts = paste0("select IFNULL(sum(NOMBRE_MORTS), 0) as nb_morts from AVICULTURE.MORTALITE where BANDE = ", infos_bande$BANDE, ";")
+    nb_morts_result = dbGetQuery(con, query_nb_morts)
+    query_dep = paste0("select IFNULL(sum(COUT), 0) as depenses from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
+    depenses = dbGetQuery(con, query_dep)
+    thisdepenses = depenses$depenses
+    nbElements = infos_bande$NOMBRE - nb_morts_result$nb_morts
+    prix_revient = (infos_bande$PRIX_ACHAT + depenses$depenses) / nbElements
+  }else{
+    numBande = 0
+    nbJours = 0
+    query_nb_morts = 0
+    nb_morts_result = 0
+    query_dep = 0
+    thisdepenses = 0
+    nbElements = 0
+    prix_revient = 0
+  }
   dbDisconnect(con)
-  return(list(numBande = infos_bande$BANDE, nbJours=nbJours, nbElements = nbElements, depenses = depenses$depenses, prix_revient = prix_revient))
+  return(list(numBande = numBande, nbJours=nbJours, nbElements = nbElements, depenses = thisdepenses, prix_revient = prix_revient))
+}
+
+cal_stat_bande2 = function(){
+  con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
+                   user = "aviculteur", password = "diagne-avi")
+  query_bande2 = 'select * from AVICULTURE.BANDES where BANDE IN (
+    select min(BANDE) from AVICULTURE.BANDES where DATE_FIN IS NULL AND DATE_DEBUT IN (
+      select min(DATE_DEBUT) from AVICULTURE.BANDES where DATE_FIN IS NULL AND DATE_DEBUT > (
+          select min(DATE_DEBUT) from AVICULTURE.BANDES where DATE_FIN IS NULL
+      )
+    )
+  );'
+  infos_bande = dbGetQuery(con, query_bande2)
+  if(nrow(infos_bande)>0){
+    numBande = infos_bande$BANDE
+    nbJours = time_length(interval(start = infos_bande$DATE_DEBUT, end = Sys.Date()), unit = "days") 
+    query_nb_morts = paste0("select IFNULL(sum(NOMBRE_MORTS), 0) as nb_morts from AVICULTURE.MORTALITE where BANDE = ", infos_bande$BANDE, ";")
+    nb_morts_result = dbGetQuery(con, query_nb_morts)
+    query_dep = paste0("select IFNULL(sum(COUT), 0) as depenses from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
+    depenses = dbGetQuery(con, query_dep)
+    thisdepenses = depenses$depenses
+    nbElements = infos_bande$NOMBRE - nb_morts_result$nb_morts
+    prix_revient = (infos_bande$PRIX_ACHAT + depenses$depenses) / nbElements
+  }else{
+    numBande = 0
+    nbJours = 0
+    query_nb_morts = 0
+    nb_morts_result = 0
+    query_dep = 0
+    thisdepenses = 0
+    nbElements = 0
+    prix_revient = 0
+  }
+  dbDisconnect(con)
+  return(list(numBande = numBande, nbJours=nbJours, nbElements = nbElements, depenses = thisdepenses, prix_revient = prix_revient))
+}
+
+cal_stat_bande3 = function(){
+  con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
+                   user = "aviculteur", password = "diagne-avi")
+  query_bande3 = 'select * from AVICULTURE.BANDES where BANDE IN (
+    select min(BANDE) from AVICULTURE.BANDES where DATE_FIN IS NULL AND DATE_DEBUT IN (
+  select min(DATE_DEBUT) from AVICULTURE.BANDES where DATE_FIN IS NULL AND DATE_DEBUT > (
+  select min(DATE_DEBUT) from AVICULTURE.BANDES where DATE_FIN IS NULL AND DATE_DEBUT > (
+  select min(DATE_DEBUT) from AVICULTURE.BANDES where DATE_FIN IS NULL
+  )
+  )
+  )
+  )'
+  infos_bande = dbGetQuery(con, query_bande3)
+  if(nrow(infos_bande)>0){
+    numBande = infos_bande$BANDE
+    nbJours = time_length(interval(start = infos_bande$DATE_DEBUT, end = Sys.Date()), unit = "days") 
+    query_nb_morts = paste0("select IFNULL(sum(NOMBRE_MORTS), 0) as nb_morts from AVICULTURE.MORTALITE where BANDE = ", infos_bande$BANDE, ";")
+    nb_morts_result = dbGetQuery(con, query_nb_morts)
+    query_dep = paste0("select IFNULL(sum(COUT), 0) as depenses from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
+    depenses = dbGetQuery(con, query_dep)
+    thisdepenses = depenses$depenses
+    nbElements = infos_bande$NOMBRE - nb_morts_result$nb_morts
+    prix_revient = (infos_bande$PRIX_ACHAT + depenses$depenses) / nbElements
+  }else{
+    numBande = 0
+    nbJours = 0
+    query_nb_morts = 0
+    nb_morts_result = 0
+    query_dep = 0
+    thisdepenses = 0
+    nbElements = 0
+    prix_revient = 0
+  }
+  dbDisconnect(con)
+  return(list(numBande = numBande, nbJours=nbJours, nbElements = nbElements, depenses = thisdepenses, prix_revient = prix_revient))
 }
 
 eff_bande <- function(stat_bande, bande){
