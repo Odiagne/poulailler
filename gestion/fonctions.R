@@ -154,41 +154,70 @@ cal_stat_bande3 = function(){
 }
 
 eff_bande <- function(stat_bande, bande){
+  if(bande == 1){
+    colorb = 'light-blue'
+  }else if(bande == 2){
+    colorb = 'purple'
+  }else if(bande == 3){
+    colorb = 'olive'
+  }
+  
   renderValueBox({
     valueBox(
       value = stat_bande$nbElements,
       subtitle = h4(paste0("Éléments de bande ", bande)),
-      color ='light-blue'
+      color = colorb
     )
   })
 }
 
 nbJoursBande <- function(stat_bande, bande){
+  if(bande == 1){
+    colorb = 'light-blue'
+  }else if(bande == 2){
+    colorb = 'purple'
+  }else if(bande == 3){
+    colorb = 'olive'
+  }
   renderValueBox({
     valueBox(
       value = stat_bande$nbJours,
       subtitle = h4(paste0("Jours pour la bande ", bande)),
-      color ='light-blue'
+      color =colorb
     )
   })
 }
 
 depBande <- function(stat_bande, bande){
+  if(bande == 1){
+    colorb = 'light-blue'
+  }else if(bande == 2){
+    colorb = 'purple'
+  }else if(bande == 3){
+    colorb = 'olive'
+  }
   renderValueBox({
     valueBox(
       value = stat_bande$depenses,
       subtitle = h4(paste0("F CFA de charges variables en bande ", bande)),
-      color ='light-blue'
+      color =colorb
     )
   })
 }
 
 prevBande <- function(stat_bande, bande){
+  if(bande == 1){
+    colorb = 'light-blue'
+  }else if(bande == 2){
+    colorb = 'purple'
+  }else if(bande == 3){
+    colorb = 'olive'
+  }
   renderValueBox({
     valueBox(
       value = ceiling(stat_bande$prix_revient),
       subtitle = h4(paste0("Prix de revient unitaire bande ", bande)),
-      color ='light-blue'
+      color =colorb
     )
   })
 }
