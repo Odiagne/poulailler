@@ -5,6 +5,7 @@ require(shinydashboard)
 require(plotly)
 require(shinyalert)
 require(shinySignals)
+require(DT)
 dashboardPage(
   dashboardHeader(title = "DIAGNE-avi"),
   dashboardSidebar(
@@ -61,6 +62,23 @@ dashboardPage(
                   useShinyalert(),
                   actionButton("validerDepense", "Valider")
                   
+                ),
+                box(
+                  width = 6, status = "primary", solidHeader = TRUE,
+                  title = "Liste des dépenses",
+                  selectInput("selTabDep", "Selectionnez la bande",
+                              c("1" = 1,
+                                "2" = 2,
+                                "3" = 3), selected = "1"),
+                  DT::dataTableOutput("tableauDep")
+                  
+                ),
+                box(
+                  width = 6, status = "primary", solidHeader = TRUE,
+                  title = "Supprimer une dépense",
+                  numericInput("idDepSup", label = h4("Entrez l'ID de la dépense"), value = NA),
+                  actionButton("supprimerDepense", "Valider")
+                  
                 )
               )
               
@@ -78,6 +96,23 @@ dashboardPage(
                   useShinyalert(),
                   actionButton("validerMortalite", "Valider")
                   
+                ),
+                box(
+                  width = 6, status = "danger", solidHeader = TRUE,
+                  title = "Liste des pertes",
+                  selectInput("selTabPerte", "Selectionnez la bande",
+                              c("1" = 1,
+                                "2" = 2,
+                                "3" = 3), selected = "1"),
+                  DT::dataTableOutput("tableauPerte")
+                  
+                ),
+                box(
+                  width = 6, status = "danger", solidHeader = TRUE,
+                  title = "Supprimer une perte",
+                  numericInput("idPerteSup", label = h4("Entrez l'ID de la perte"), value = NA),
+                  actionButton("supprimerPerte", "Valider")
+                  
                 )
               )
       )
@@ -91,7 +126,7 @@ dashboardPage(
                   selectInput("typeVente", "Type de vente:",
                               c("Détail" = "det",
                                 "En gros" = "gros")),
-                  numericInput("prixVente", label = h4("Entrez le prix total de la vente"), value = NA, min = 0),
+                  numericInput("prixVente", label = h4("Entrez le prix unitaire de la vente"), value = NA, min = 0),
                   numericInput("nbVendu", label = h4("Entrez le nombre d'éléments vendus"), value = NA, min = 0),
                   dateInput("dateVente", label = h4('Date de la vente'), value = Sys.Date()),
                   textInput("remarquesVente", label = "Remarques ?"),
