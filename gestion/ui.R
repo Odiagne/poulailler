@@ -46,6 +46,11 @@ dashboardPage(
                 valueBoxOutput("prevBande1"),
                 valueBoxOutput("prevBande2"),
                 valueBoxOutput("prevBande3")
+              ),
+              fluidRow(
+                valueBoxOutput("recBande1"),
+                valueBoxOutput("recBande2"),
+                valueBoxOutput("recBande3")
               )
       )
       ,
@@ -132,6 +137,23 @@ dashboardPage(
                   textInput("remarquesVente", label = "Remarques ?"),
                   useShinyalert(),
                   actionButton("validerVente", "Valider")
+                  
+                ),
+                box(
+                  width = 6, status = "success", solidHeader = TRUE,
+                  title = "Liste des ventes",
+                  selectInput("selTabVente", "Selectionnez la bande",
+                              c("1" = 1,
+                                "2" = 2,
+                                "3" = 3), selected = "1"),
+                  DT::dataTableOutput("tableauVente")
+                  
+                ),
+                box(
+                  width = 6, status = "success", solidHeader = TRUE,
+                  title = "Supprimer une vente",
+                  numericInput("idVenteSup", label = h4("Entrez l'ID de la vente"), value = NA),
+                  actionButton("supprimerVente", "Valider")
                   
                 )
               )

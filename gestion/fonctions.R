@@ -44,6 +44,15 @@ supPerte = function(id_perte){
   dbDisconnect(con)
 }
 
+supVente = function(id_vente){
+  con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
+                   user = "aviculteur", password = "diagne-avi")
+  
+  query = paste0('DELETE FROM AVICULTURE.VENTES WHERE ID = "', id_vente, '"')
+  dbGetQuery(con, query)
+  dbDisconnect(con)
+}
+
 add_mort = function(bande, nb_morts, date, remarque){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
                    user = "aviculteur", password = "diagne-avi")
@@ -71,13 +80,18 @@ summarise_infos = function(infos_bande, con){
     nb_morts_result = dbGetQuery(con, query_nb_morts)
     query_dep = paste0("select IFNULL(sum(COUT), 0) as depenses from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
     depenses = dbGetQuery(con, query_dep)
+    query_recette = paste0("select IFNULL(sum(PRIX), 0) as recettes from AVICULTURE.VENTES where BANDE = ", infos_bande$BANDE, ";")
+    res_recettes = dbGetQuery(con, query_recette)
     query_tab_dep = paste0("select ID, TYPE, COUT, DATE from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
     tableau_depenses = dbGetQuery(con, query_tab_dep)
     query_tab_pertes = paste0("select ID, BANDE, NOMBRE_MORTS, DATE from AVICULTURE.MORTALITE where BANDE = ", infos_bande$BANDE, ";")
     tableau_pertes = dbGetQuery(con, query_tab_pertes)
+    query_tab_ventes = paste0("select ID, PRIX, NOMBRE_VENDU, DATE from AVICULTURE.VENTES where BANDE = ", infos_bande$BANDE, ";")
+    tableau_ventes = dbGetQuery(con, query_tab_ventes)
     thisdepenses = depenses$depenses + infos_bande$PRIX_ACHAT
     nbElements = infos_bande$NOMBRE - nb_morts_result$nb_morts
     prix_revient = (infos_bande$PRIX_ACHAT + depenses$depenses) / nbElements
+    recettes = res_recettes$recettes
   }else{
     numBande = 0
     nbJours = 0
@@ -87,11 +101,13 @@ summarise_infos = function(infos_bande, con){
     thisdepenses = 0
     nbElements = 0
     prix_revient = 0
+    recettes = 0
     tableau_depenses = data.frame(ID=0, BANDE=0, TYPE=0, PRIX=0, NOMBRE_VENDU=0, DATE='')
     tableau_pertes = data.frame(ID=0, BANDE=0, NOMBRE_MORTS=0, DATE='')
+    tableau_ventes = data.frame(ID=0, PRIX=0, NOMBRE_VENDU=0, DATE='')
   }
   dbDisconnect(con)
-  return(list(numBande = numBande, nbJours=nbJours, nbElements = nbElements, depenses = thisdepenses, prix_revient = prix_revient, tableau_depenses=tableau_depenses, tableau_pertes=tableau_pertes))
+  return(list(numBande = numBande, nbJours=nbJours, nbElements = nbElements, depenses = thisdepenses, recettes=recettes, prix_revient = prix_revient, tableau_depenses=tableau_depenses, tableau_pertes=tableau_pertes, tableau_ventes=tableau_ventes))
   
 }
 
@@ -275,6 +291,23 @@ prevBande <- function(stat_bande, bande){
   })
 }
 
+recBande <- function(stat_bande, bande){
+  if(bande == 1){
+    colorb = 'light-blue'
+  }else if(bande == 2){
+    colorb = 'purple'
+  }else if(bande == 3){
+    colorb = 'olive'
+  }
+  renderValueBox({
+    valueBox(
+      value = ceiling(stat_bande$recette),
+      subtitle = h4(paste0("Recettes de la bande ", bande)),
+      color =colorb
+    )
+  })
+}
+
 summaryUpdate = function(output){
   stat_bande1 = cal_stat_bande1()
   stat_bande2 = cal_stat_bande2()
@@ -296,6 +329,10 @@ summaryUpdate = function(output){
   output$prevBande1 <- prevBande(stat_bande1, 1)
   output$prevBande2 <- prevBande(stat_bande2, 2)
   output$prevBande3 <- prevBande(stat_bande3, 3)
+  
+  output$recBande1 <- recBande(stat_bande1, 1)
+  output$recBande2 <- recBande(stat_bande2, 2)
+  output$recBande3 <- recBande(stat_bande3, 3)
 }
 
 listeDepUpdate = function(input, output){
@@ -337,6 +374,27 @@ listePerteUpdate = function(input, output){
   } else if (perteToShow == 3){
     output$tableauPerte <- DT::renderDataTable({
       datatable(stat_bande3$tableau_pertes, rownames= FALSE)
+    })
+  }
+}
+
+listeVenteUpdate = function(input, output){
+  stat_bande1 = cal_stat_bande1()
+  stat_bande2 = cal_stat_bande2()
+  stat_bande3 = cal_stat_bande3()
+  
+  venteToShow = input$selTabPerte
+  if (venteToShow == 1){
+    output$tableauVente <- DT::renderDataTable({
+      datatable(stat_bande1$tableau_ventes, rownames= FALSE)
+    })
+  } else if (venteToShow == 2){
+    output$tableauVente <- DT::renderDataTable({
+      datatable(stat_bande2$tableau_ventes, rownames= FALSE)
+    })
+  } else if (venteToShow == 3){
+    output$tableauVente <- DT::renderDataTable({
+      datatable(stat_bande3$tableau_ventes, rownames= FALSE)
     })
   }
 }

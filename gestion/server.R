@@ -25,6 +25,10 @@ server <- function(input, output, session) {
   output$prevBande2 <- prevBande(stat_bande2, 2)
   output$prevBande3 <- prevBande(stat_bande3, 3)
   
+  output$recBande1 <- recBande(stat_bande1, 1)
+  output$recBande2 <- recBande(stat_bande2, 2)
+  output$recBande3 <- recBande(stat_bande3, 3)
+  
   observeEvent(input$Refresh, {
     summaryUpdate(output)
   })
@@ -109,8 +113,35 @@ server <- function(input, output, session) {
     typeVente = ifelse(input$typeVente=="det", "AU DETAIL", "EN GROS")
     add_vente(input$numBandeVente, typeVente, input$prixVente*input$nbVendu, input$nbVendu, input$dateVente, input$remarquesVente)
     shinyalert("Success!", "Vente enregistrée", type = "success")
+    
+    listeVenteUpdate(input, output)
+    summaryUpdate(output)
   })
   
+  observe({
+    venteToShow = input$selTabPerte
+    if (venteToShow == 1){
+      output$tableauVente <- DT::renderDataTable({
+        datatable(stat_bande1$tableau_ventes, rownames= FALSE)
+      })
+    } else if (venteToShow == 2){
+      output$tableauVente <- DT::renderDataTable({
+        datatable(stat_bande2$tableau_ventes, rownames= FALSE)
+      })
+    } else if (venteToShow == 3){
+      output$tableauVente <- DT::renderDataTable({
+        datatable(stat_bande3$tableau_ventes, rownames= FALSE)
+      })
+    }
+  })
+  
+  observeEvent(input$supprimerVente, {
+    supVente(input$idVenteSup)
+    shinyalert("Success!", "Vente supprimée", type = "success")
+    
+    listeVenteUpdate(input, output)
+    summaryUpdate(output)
+  })
   
 }
 
