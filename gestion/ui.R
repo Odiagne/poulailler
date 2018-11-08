@@ -17,7 +17,8 @@ dashboardPage(
       menuItem("Dépenses", tabName = "depenses", icon = icon("credit-card")),
       menuItem("Ventes", tabName = "ventes", icon = icon("credit-card")),
       menuItem("Mortalité", tabName = "mortalite", icon = icon("bomb")),
-      menuItem("Bandes", tabName = "bandes", icon = icon("cart-plus"))
+      menuItem("Bandes", tabName = "bandes", icon = icon("cart-plus")),
+      menuItem("Historique", tabName = "historique")
       # ,
       # menuItem("Map", tabName = "map")
     )
@@ -59,7 +60,11 @@ dashboardPage(
                 box(
                   width = 6, status = "primary", solidHeader = TRUE,
                   title = "Ajouter une dépense",
-                  numericInput("numBandeDep", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
+                 # numericInput("numBandeDep", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
+                  selectInput("numBandeDep", "Selectionnez la bande",
+                              c("1" = 1,
+                                "2" = 2,
+                                "3" = 3)),
                   textInput("typeDepense", label = h4("Entrez le type de dépense")),
                   numericInput("coutDep", label = h4("Entrez le cout de la dépense"), value = NA, min = 0),
                   dateInput("dateDepense", label = h4('Date de la dépense'), value = Sys.Date()),
@@ -94,7 +99,11 @@ dashboardPage(
                 box(
                   width = 6, status = "danger", solidHeader = TRUE,
                   title = "Recenser les pertes",
-                  numericInput("numBandeMort", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
+                  #numericInput("numBandeMort", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
+                  selectInput("numBandeMort", "Selectionnez la bande",
+                              c("1" = 1,
+                                "2" = 2,
+                                "3" = 3)),
                   numericInput("nbMort", label = h4("Entrez le nombre de pertes"), value = NA, min = 0),
                   dateInput("dateMort", label = h4('Date du constat'), value = Sys.Date()),
                   textInput("remarquesMort", label = "Remarques ?"),
@@ -127,7 +136,11 @@ dashboardPage(
                 box(
                   width = 6, status = "success", solidHeader = TRUE,
                   title = "Enregistrer les ventes",
-                  numericInput("numBandeVente", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
+                  # numericInput("numBandeVente", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
+                  selectInput("numBandeVente", "Selectionnez la bande",
+                              c("1" = 1,
+                                "2" = 2,
+                                "3" = 3)),
                   selectInput("typeVente", "Type de vente:",
                               c("Détail" = "det",
                                 "En gros" = "gros")),
@@ -176,12 +189,36 @@ dashboardPage(
                 box(
                   width = 6, status = "primary", solidHeader = TRUE,
                   title = "Cloturer une bande",
-                  numericInput("numBandeCloture", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
+                  #numericInput("numBandeCloture", label = h4("Entrez le numéro de la bande"), value = NA, min = 0),
+                  selectInput("numBandeCloture", "Selectionnez la bande",
+                              c("1" = 1,
+                                "2" = 2,
+                                "3" = 3)),
                   dateInput("dateFinBande", label = h4('Date de fin'), value = Sys.Date()),
                   textInput("remarquesClos", label = "Remarques ?"),
                   useShinyalert(),
                   actionButton("validerFinBande", "Valider")
                   
+                )
+              )
+      )
+      ,
+      tabItem("historique",
+              actionButton("Refresh_historique", "Rafraîchir"),
+              fluidRow(
+                box(
+                  width = 12, status = "primary", solidHeader = TRUE,
+                  title = "Historique",
+                  
+                  # dateInput("dateDebutBande", label = h4('Date de début'), value = Sys.Date()),
+                  # numericInput("nombreElementsBande", label = h4("Entrez le nombre d'éléments"), value = NA, min = 0),
+                  # numericInput("prixAchat", label = h4("Entrez le prix d'achat de la bande"), value = NA, min = 0),
+                  # useShinyalert(),
+                  # actionButton("validerDebutBande", "Valider")
+                  
+                  # ,
+                  # tableOutput("packageTable")
+                  DT::dataTableOutput("tableauHistorique")
                 )
               )
       )

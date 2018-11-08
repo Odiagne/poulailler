@@ -12,7 +12,28 @@ add_bande = function(date_debut, nombre, prix_achat){
 end_bande = function(numBandeCloture, dateFinBande, remarques){
   con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
                    user = "aviculteur", password = "diagne-avi")
-  query = paste0('UPDATE AVICULTURE.BANDES SET DATE_FIN = "', dateFinBande, '", REMARQUES = "', remarques, '" WHERE BANDE = ', numBandeCloture)
+  
+  query_recette = paste0("select IFNULL(sum(PRIX), 0) as recettes from AVICULTURE.VENTES where BANDE = ", numBandeCloture, ";")
+  res_recettes = dbGetQuery(con, query_recette)
+  recettes = res_recettes$recettes
+  
+  query_nb_ventes = paste0("select IFNULL(sum(NOMBRE_VENDU), 0) as nb_ventes from AVICULTURE.VENTES where BANDE = ", numBandeCloture, ";")
+  nb_ventes_result = dbGetQuery(con, query_nb_ventes)
+  nombreVendus = nb_ventes_result$nb_ventes
+  
+  query_nb_morts = paste0("select IFNULL(sum(NOMBRE_MORTS), 0) as nb_morts from AVICULTURE.MORTALITE where BANDE = ", numBandeCloture, ";")
+  nb_morts_result = dbGetQuery(con, query_nb_morts)
+  nombreMorts = nb_morts_result$nb_morts
+  
+  query_dep = paste0("select IFNULL(sum(COUT), 0) as depenses from AVICULTURE.DEPENSES where BANDE = ", numBandeCloture, ";")
+  depenses_var = dbGetQuery(con, query_dep)
+  
+  query_bande = paste0("select * from AVICULTURE.BANDES where BANDE = ", numBandeCloture, ";")
+  infos_bande = dbGetQuery(con, query_bande)
+  
+  depenses = depenses_var$depenses + infos_bande$PRIX_ACHAT
+  
+  query = paste0('UPDATE AVICULTURE.BANDES SET DATE_FIN = "', dateFinBande, '", NOMBRE_VENDUS = ',nombreVendus,', NOMBRE_MORTS = ',nombreMorts,', RECETTES = ',recettes,', DEPENSES =', depenses,', REMARQUES = "', remarques, '" WHERE BANDE = ', numBandeCloture)
   dbGetQuery(con, query)
   dbDisconnect(con)
 }
@@ -22,6 +43,7 @@ add_depense = function(bande, type, cout, date, remarque){
                    user = "aviculteur", password = "diagne-avi")
   
   query = paste0('INSERT INTO AVICULTURE.DEPENSES(BANDE, TYPE, COUT, DATE, REMARQUES) VALUES(', bande, ', "', type, '", ', cout, ', "', date, '", "', remarque,'")') 
+  print(query)
   dbGetQuery(con, query)
   dbDisconnect(con)
 }
@@ -78,28 +100,36 @@ summarise_infos = function(infos_bande, con){
     nbJours = time_length(interval(start = infos_bande$DATE_DEBUT, end = Sys.Date()), unit = "days") 
     query_nb_morts = paste0("select IFNULL(sum(NOMBRE_MORTS), 0) as nb_morts from AVICULTURE.MORTALITE where BANDE = ", infos_bande$BANDE, ";")
     nb_morts_result = dbGetQuery(con, query_nb_morts)
+    nb_morts = nb_morts_result$nb_morts
     query_dep = paste0("select IFNULL(sum(COUT), 0) as depenses from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
     depenses = dbGetQuery(con, query_dep)
     query_recette = paste0("select IFNULL(sum(PRIX), 0) as recettes from AVICULTURE.VENTES where BANDE = ", infos_bande$BANDE, ";")
     res_recettes = dbGetQuery(con, query_recette)
     query_tab_dep = paste0("select ID, TYPE, COUT, DATE from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
     tableau_depenses = dbGetQuery(con, query_tab_dep)
-    query_tab_pertes = paste0("select ID, BANDE, NOMBRE_MORTS, DATE from AVICULTURE.MORTALITE where BANDE = ", infos_bande$BANDE, ";")
+    query_tab_pertes = paste0("select ID, NOMBRE_MORTS, DATE from AVICULTURE.MORTALITE where BANDE = ", infos_bande$BANDE, ";")
     tableau_pertes = dbGetQuery(con, query_tab_pertes)
     query_tab_ventes = paste0("select ID, PRIX, NOMBRE_VENDU, DATE from AVICULTURE.VENTES where BANDE = ", infos_bande$BANDE, ";")
     tableau_ventes = dbGetQuery(con, query_tab_ventes)
+    query_nb_ventes = paste0("select IFNULL(sum(NOMBRE_VENDU), 0) as nb_ventes from AVICULTURE.VENTES where BANDE = ", infos_bande$BANDE, ";")
+    nb_ventes_result = dbGetQuery(con, query_nb_ventes)
+    nb_ventes = nb_ventes_result$nb_ventes
     thisdepenses = depenses$depenses + infos_bande$PRIX_ACHAT
-    nbElements = infos_bande$NOMBRE - nb_morts_result$nb_morts
+    nbElements = infos_bande$NOMBRE - nb_morts
+    nbElements_restants = infos_bande$NOMBRE - nb_morts - nb_ventes
     prix_revient = (infos_bande$PRIX_ACHAT + depenses$depenses) / nbElements
     recettes = res_recettes$recettes
+    
   }else{
     numBande = 0
     nbJours = 0
     query_nb_morts = 0
-    nb_morts_result = 0
+    nb_morts = 0
+    nb_ventes = 0
     query_dep = 0
     thisdepenses = 0
     nbElements = 0
+    nbElements_restants = 0
     prix_revient = 0
     recettes = 0
     tableau_depenses = data.frame(ID=0, BANDE=0, TYPE=0, PRIX=0, NOMBRE_VENDU=0, DATE='')
@@ -107,7 +137,13 @@ summarise_infos = function(infos_bande, con){
     tableau_ventes = data.frame(ID=0, PRIX=0, NOMBRE_VENDU=0, DATE='')
   }
   dbDisconnect(con)
-  return(list(numBande = numBande, nbJours=nbJours, nbElements = nbElements, depenses = thisdepenses, recettes=recettes, prix_revient = prix_revient, tableau_depenses=tableau_depenses, tableau_pertes=tableau_pertes, tableau_ventes=tableau_ventes))
+  
+  return(list(numBande = numBande, nbJours=nbJours, nbElements = nbElements,
+              nbElements_restants = nbElements_restants, depenses = thisdepenses,
+              recettes=recettes, prix_revient = prix_revient,
+              tableau_depenses=tableau_depenses, tableau_pertes=tableau_pertes,
+              tableau_ventes=tableau_ventes, nb_morts=nb_morts,
+              nb_ventes = nb_ventes))
   
 }
 
@@ -120,32 +156,8 @@ cal_stat_bande1 = function(){
       )
   );'
   infos_bande = dbGetQuery(con, query_bande1)
-  summarise_infos(infos_bande, con)
-  # if(nrow(infos_bande)>0){
-  #   numBande = infos_bande$BANDE
-  #   nbJours = time_length(interval(start = infos_bande$DATE_DEBUT, end = Sys.Date()), unit = "days") 
-  #   query_nb_morts = paste0("select IFNULL(sum(NOMBRE_MORTS), 0) as nb_morts from AVICULTURE.MORTALITE where BANDE = ", infos_bande$BANDE, ";")
-  #   nb_morts_result = dbGetQuery(con, query_nb_morts)
-  #   query_dep = paste0("select IFNULL(sum(COUT), 0) as depenses from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
-  #   depenses = dbGetQuery(con, query_dep)
-  #   query_tab_dep = paste0("select ID, TYPE, COUT, DATE from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
-  #   tableau_depenses = dbGetQuery(con, query_tab_dep)
-  #   thisdepenses = depenses$depenses + infos_bande$PRIX_ACHAT
-  #   nbElements = infos_bande$NOMBRE - nb_morts_result$nb_morts
-  #   prix_revient = (infos_bande$PRIX_ACHAT + depenses$depenses) / nbElements
-  # }else{
-  #   numBande = 0
-  #   nbJours = 0
-  #   query_nb_morts = 0
-  #   nb_morts_result = 0
-  #   query_dep = 0
-  #   thisdepenses = 0
-  #   nbElements = 0
-  #   prix_revient = 0
-  #   tableau_depenses = data.frame(ID=0, BANDE=0, TYPE=0, PRIX=0, NOMBRE_VENDU=0, DATE='', REMARQUES='')
-  # }
-  # dbDisconnect(con)
-  # return(list(numBande = numBande, nbJours=nbJours, nbElements = nbElements, depenses = thisdepenses, prix_revient = prix_revient, tableau_depenses=tableau_depenses))
+  return(summarise_infos(infos_bande, con))
+  
 }
 
 cal_stat_bande2 = function(){
@@ -159,29 +171,7 @@ cal_stat_bande2 = function(){
     )
   );'
   infos_bande = dbGetQuery(con, query_bande2)
-  summarise_infos(infos_bande, con)
-  # if(nrow(infos_bande)>0){
-  #   numBande = infos_bande$BANDE
-  #   nbJours = time_length(interval(start = infos_bande$DATE_DEBUT, end = Sys.Date()), unit = "days") 
-  #   query_nb_morts = paste0("select IFNULL(sum(NOMBRE_MORTS), 0) as nb_morts from AVICULTURE.MORTALITE where BANDE = ", infos_bande$BANDE, ";")
-  #   nb_morts_result = dbGetQuery(con, query_nb_morts)
-  #   query_dep = paste0("select IFNULL(sum(COUT), 0) as depenses from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
-  #   depenses = dbGetQuery(con, query_dep)
-  #   thisdepenses = depenses$depenses
-  #   nbElements = infos_bande$NOMBRE - nb_morts_result$nb_morts
-  #   prix_revient = (infos_bande$PRIX_ACHAT + depenses$depenses) / nbElements
-  # }else{
-  #   numBande = 0
-  #   nbJours = 0
-  #   query_nb_morts = 0
-  #   nb_morts_result = 0
-  #   query_dep = 0
-  #   thisdepenses = 0
-  #   nbElements = 0
-  #   prix_revient = 0
-  # }
-  # dbDisconnect(con)
-  # return(list(numBande = numBande, nbJours=nbJours, nbElements = nbElements, depenses = thisdepenses, prix_revient = prix_revient))
+  return(summarise_infos(infos_bande, con))
 }
 
 cal_stat_bande3 = function(){
@@ -197,29 +187,7 @@ cal_stat_bande3 = function(){
   )
   )'
   infos_bande = dbGetQuery(con, query_bande3)
-  summarise_infos(infos_bande, con)
-  # if(nrow(infos_bande)>0){
-  #   numBande = infos_bande$BANDE
-  #   nbJours = time_length(interval(start = infos_bande$DATE_DEBUT, end = Sys.Date()), unit = "days") 
-  #   query_nb_morts = paste0("select IFNULL(sum(NOMBRE_MORTS), 0) as nb_morts from AVICULTURE.MORTALITE where BANDE = ", infos_bande$BANDE, ";")
-  #   nb_morts_result = dbGetQuery(con, query_nb_morts)
-  #   query_dep = paste0("select IFNULL(sum(COUT), 0) as depenses from AVICULTURE.DEPENSES where BANDE = ", infos_bande$BANDE, ";")
-  #   depenses = dbGetQuery(con, query_dep)
-  #   thisdepenses = depenses$depenses
-  #   nbElements = infos_bande$NOMBRE - nb_morts_result$nb_morts
-  #   prix_revient = (infos_bande$PRIX_ACHAT + depenses$depenses) / nbElements
-  # }else{
-  #   numBande = 0
-  #   nbJours = 0
-  #   query_nb_morts = 0
-  #   nb_morts_result = 0
-  #   query_dep = 0
-  #   thisdepenses = 0
-  #   nbElements = 0
-  #   prix_revient = 0
-  # }
-  # dbDisconnect(con)
-  # return(list(numBande = numBande, nbJours=nbJours, nbElements = nbElements, depenses = thisdepenses, prix_revient = prix_revient))
+  return(summarise_infos(infos_bande, con))
 }
 
 eff_bande <- function(stat_bande, bande){
@@ -233,7 +201,7 @@ eff_bande <- function(stat_bande, bande){
   
   renderValueBox({
     valueBox(
-      value = stat_bande$nbElements,
+      value = format(stat_bande$nbElements_restants, digits = 7),
       subtitle = h4(paste0("Éléments de bande ", bande)),
       color = colorb
     )
@@ -267,7 +235,7 @@ depBande <- function(stat_bande, bande){
   }
   renderValueBox({
     valueBox(
-      value = stat_bande$depenses,
+      value = format(stat_bande$depenses, digits = 9, big.mark=" "),
       subtitle = h4(paste0("F CFA de charges variables en bande ", bande)),
       color =colorb
     )
@@ -284,7 +252,7 @@ prevBande <- function(stat_bande, bande){
   }
   renderValueBox({
     valueBox(
-      value = ceiling(stat_bande$prix_revient),
+      value = format(ceiling(stat_bande$prix_revient), digits = 9, big.mark=" "),
       subtitle = h4(paste0("Prix de revient unitaire bande ", bande)),
       color =colorb
     )
@@ -301,14 +269,14 @@ recBande <- function(stat_bande, bande){
   }
   renderValueBox({
     valueBox(
-      value = ceiling(stat_bande$recette),
+      value = format(ceiling(stat_bande$recette), digits = 9, big.mark=" "),
       subtitle = h4(paste0("Recettes de la bande ", bande)),
       color =colorb
     )
   })
 }
 
-summaryUpdate = function(output){
+summaryUpdate = function(stat_bande1, stat_bande2, stat_bande3, output){
   stat_bande1 = cal_stat_bande1()
   stat_bande2 = cal_stat_bande2()
   stat_bande3 = cal_stat_bande3()
@@ -383,7 +351,7 @@ listeVenteUpdate = function(input, output){
   stat_bande2 = cal_stat_bande2()
   stat_bande3 = cal_stat_bande3()
   
-  venteToShow = input$selTabPerte
+  venteToShow = input$selTabVente
   if (venteToShow == 1){
     output$tableauVente <- DT::renderDataTable({
       datatable(stat_bande1$tableau_ventes, rownames= FALSE)
@@ -398,3 +366,20 @@ listeVenteUpdate = function(input, output){
     })
   }
 }
+
+aff_historique = function(){
+  con <- dbConnect(RMySQL::MySQL(), host = "server.odiagne.com",
+                   user = "aviculteur", password = "diagne-avi")
+  
+  query = paste0('select DATE_DEBUT AS DEBUT, DATE_FIN AS FIN, DEPENSES, NOMBRE_MORTS AS PERTES, NOMBRE_VENDUS AS VENDUS, RECETTES from AVICULTURE.BANDES where DATE_FIN IS NOT NULL;') 
+  historique = dbGetQuery(con, query)
+  dbDisconnect(con)
+  return(historique)
+}
+
+refresh_historique = function(output){
+  output$tableauHistorique <- DT::renderDataTable({
+    hist = aff_historique()
+    datatable(hist, rownames= FALSE) })
+}
+
